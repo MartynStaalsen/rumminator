@@ -40,10 +40,49 @@ we need to be able to represent and manipulate cards. Cards have various propert
 
 There's some room in implementation approach here: 
 - we could have cards be implementations of a base Card class, with methods to get or calculate i.e. score
+- - an object-based approach may be convenient later for fancy set-building operations where sophisticated data-structure patterns might befit complex set searching & creation.
 - all possible cards could be enums, with static lookup functions to get properties.
 - cards could be their concise designation itself (again, functions for the property lookup)
 - - this is advantageously simple for a distributed approach, where passing the card text IS passing the card.
 
 
 #### Wilds
-Already tho, we've got a complication. Joker's have no suit, and neither they nor 2's have a fixed rank. 
+Already tho, we've got a complication. Joker's have no suit, and neither they nor 2's have a fixed rank. We can use "None" or "-" for these card's suit and/or rank. But we'll find that these deviants are gonna be the bane of our existence if/when we get around to set building & searching algorithms.
+
+### Sets
+
+#### Set-as-container
+A set of cards is both an abstract and a physical thing. Physical in the sense that cards on the table are only allowed there if they are contained within exactly one valid bid set. Abstract in the sense that cards in a player's hand are simultaneously in multiple bid candidates.
+
+Building sets on the table and building sets in the hand are almost the same problem. So to the extent we allow/provide set building logic to the players themselves, it will make sense to re-use this logic. Naively, that suggests that set-as-container is only a viable pattern for table representation. 
+
+But, I think set-as-container is troublesome for on-table representation as well. That's because the on-table manipulation phase starts and ends with valid sets, but may have broken bids while cards are being manipulated.
+
+This points me towards the following implementation approach:
+Card containers should be a thing, but "set"ness maybe ought to be the result of a validation query rather than object construction. 
+A hybrid approach may still make sense: CardContainer as a base class, of which Run and Set are sub-classes. In this scenario, on-table play would look like a player proposing a new configuration of Runs and Sets which would be validated before turn-end.
+
+### Moves
+on-table moves might be the hardest thing to implement. We can think of these as steps or transformations in table-state space (edges in a graph of all possible table states). But while this representation is convenient for searching, it has some issues:
+- "illegal" moves may lead to "legal" bid configurations. That is, you might have to break a set along the way to making a new valid one.
+- If you include illegal moves, the graph gets super dense, making blind searching potentially very costly. 
+
+This is a whole mess. But, it's the player's job to figure out! The Engine only needs to be able to validate if a proposed new configuration is legal, not the moves needed to get there. So, I propose that all the actual move logic will rest on the Player side, with the engine simply a "can you make the table look like this please" suggestions which it will either accept or reject. 
+Note: rejection here is intended as a game-control mechanism, but would probably be inefficient as a reasoning aid.
+
+# Proposed implementation
+So, here's a way to attempt this:
+
+## Engine first
+First off, the engine will be the primary priority. We'll consider Player architecture in the design, but the goal is to first build a complete working engine before actually implementing any player code.
+
+### Validator, not facilitator
+We'll implement the engine as a state holder and representer, but not as an actual transformer of state except for the basic functions of drawing & discarding. Instead, actual table manipulation will be implemented using a proposal system, where players will propose a whole-table state which the engine accept and update itself to match (if valid). This will cause problems later, but it's simple enough for now.
+
+### State representation scheme
+The engine will represent all elements of game state, including on-table sets, each player's hand contents, and draw/discard decks. It will need to be able to provide parts of this state as appropriate to each player (only give a player visibility to _their_ hand etc), but that shouldn't be too hard.
+
+### Focused Responsibility
+The engine is strictly about representing and managing game state. For the initial implementation, we will NOT consider re-use of any of its logic or representation ability for Player use. I'm doing this for two reasons:
+- disconnect implementation time for engine & player. Success for this project _could_ look like a working engine with now players, initially
+- allow the ability for competing player implementations: multiple developers could build their own Player models simultaneously, without the complexity & conflict of interest created by the possibility of modifying Engine code to suit such implementations.
