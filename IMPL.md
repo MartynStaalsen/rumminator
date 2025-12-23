@@ -22,4 +22,28 @@ An alternative approach would be for each model to be implemented as plugins. I.
 Really, these models are the same, just communicating differently. In the first, the players are distributed processes communicating over IPC. This adds complexity due to the additional layer, but provides some useful benefits for future applications:
 - it is convenient for the purposes of playing multiple model types against each other as the "configuration" is very run-time dynamic.
 - it presents the ability for a human player to participate in games with the same interface 
-- it makes it easier to cycle players through different games each hand for tournament style play
+- it makes it easier to cycle players through different games each hand for tournament style play.
+- it might make it easier to log, interrogate, and debug decision-making and general game flow.
+
+So, the reasonable thing to do is to start with a plugin-style architecture, get that working, then swap to a distributed approach. I ought to be able to re-use most of the backend code anyway.
+
+## Engine design
+Let's think about the engine itself. Here's some elements we'll need:
+
+### Cards
+we need to be able to represent and manipulate cards. Cards have various properties that matter for set and bid creation:
+- rank (i.e. value)
+- suit
+- value (score)
+- human-readable designation (i.e. "Joker", "Queen of hearts" or "2 of clubs")
+- concise designation (i.e. "J-", "QH", "2C")
+
+There's some room in implementation approach here: 
+- we could have cards be implementations of a base Card class, with methods to get or calculate i.e. score
+- all possible cards could be enums, with static lookup functions to get properties.
+- cards could be their concise designation itself (again, functions for the property lookup)
+- - this is advantageously simple for a distributed approach, where passing the card text IS passing the card.
+
+
+#### Wilds
+Already tho, we've got a complication. Joker's have no suit, and neither they nor 2's have a fixed rank. 
