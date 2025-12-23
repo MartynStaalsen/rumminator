@@ -5,7 +5,7 @@
 # Big picture
 Contract Rummy is a game about building sets of cards. Players use a starting "hand" of cards, to which they add by Drawing and diminish by Laying Down and Discarding. On a given "Hand" of play (not to be )
 
-# PrePendix: Card set types
+# Pre-Pendix: Card set types
 There are two types of card sets:
 - **group**: 3 or more cards of the same "rank" (ordinal value, that is).  
 - - **example**: 3 of clubs, 3 of spades, 3 of hearts
@@ -13,7 +13,7 @@ There are two types of card sets:
 - - - doesn't matter if you've got multiple of the same suit.
 - - **example**: King of diamonds, King of hearts, King of Clubs, King of Hearts
 - - - at least 3, not exactly 3
-- - **example**: 2 of spades, 4 of diabmonds, 4 of clubs
+- - **example**: 2 of spades, 4 of diamonds, 4 of clubs
 - - - 2 is wild here, standing in as a 4 of spades
 
 - **run**: 4 or more cards of same suit which form a sequencial series.
@@ -74,16 +74,16 @@ Let's call each implementation of a contract a "bid".
 
 
 #### Gratuity
-After laying down, (be that on the same turn or subsequent turns,) a player can play additional cards on on-table bids. This can involve all kinds of shennanigans, but follows these basic rules: 
+After laying down, (be that on the same turn or subsequent turns,) a player can play additional cards on on-table bids. This can involve all kinds of shenanigans, but follows these basic rules: 
 - bids cannot be created or destroyed, they can only change forms. 
 - once a card goes from a hand to the table, it can't go back into your hand. 
 - on-table manipulation may "break" bids temporarily, but contracts must be complete at the end of the turn
 
 ## Discard
-A player ends their turn by discarding a card. This discarded card can come from either the player's hand OR fom the table (this is typically reserved for situations where complex table manipulation has occured.)
+A player ends their turn by discarding a card. This discarded card can come from either the player's hand OR fom the table (this is typically reserved for situations where complex table manipulation has occurred.)
 
 ## Out-of-turn draw ("Nunu")
-After a player discards, all other players have the oppertunity to draw that discard, starting with the player to the left of the discarder (for whom this card is an alternate draw target). If a player nunus this card, they receive an additional face-down penalty card from the top of the deck. 
+After a player discards, all other players have the opportunity to draw that discard, starting with the player to the left of the discarder (for whom this card is an alternate draw target). If a player nunus this card, they receive an additional face-down penalty card from the top of the deck. 
 Once the next player draws to start their turn, this card is "dead", and is no longer a valid nunu target.
 
 ### Decisionmaking notes
@@ -92,9 +92,9 @@ In general, good most of Rummy is played in the discard phase.
 Good rummy tactics comes down to two questions: what to collect, and what to discard. 
 A naive strategy would be to always discard one's highest point-valued cards. A slightly more intelligent strategy involves looking for viable bids candidates in one's held cards, and selecting discards which maximize one's probability to lay down a complete bid on a subsequent turn. 
 
-This decision-making will extend to nunu oppertunities, where a player will choose to draw out of turn if a discard is a helpful addition to a held bid candidate.
+This decision-making will extend to nunu opportunities, where a player will choose to draw out of turn if a discard is a helpful addition to a held bid candidate.
 
-Additionally, players may observe the actions or laid bids of other players to guide their deciisionmaking. Noticing that an opponent is nunuing Kings on a hand with Groups in the contract might prompt a player to choose to discard a lower  card instead of their King, suspecting they may be able to play it later on their opponent's bid.
+Additionally, players may observe the actions or laid bids of other players to guide their decision-making. Noticing that an opponent is nunuing Kings on a hand with Groups in the contract might prompt a player to choose to discard a lower  card instead of their King, suspecting they may be able to play it later on their opponent's bid.
 
 Finally, note that Nunuing for its own sake is a tactic some players will employ to increase their hand's card population. A sparse hand with few bid candidates may become more likely to be playable by the increased draw rate the penalty card provides, at the cost of more "trash" cards. This tactic is especially important when it can make the difference between being able to lay down a bid before an opponent plays out. 
 

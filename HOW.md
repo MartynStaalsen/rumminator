@@ -38,8 +38,8 @@ A naive model & implementation will only consider the easiest of these to RL aga
 Cards in the player's hand. Simple 
 
 ## output: move selection
-A player can make moves on their turn, but also has the oppertunity to draw out of turn. In my mind, it seems that the legal moves in a given situation might be considered an additiona input to the Player. Providing this for free to the player does limit the oppertunity for player ingenuity, but _might_ be necessary for an RL approach. I'll keep noodling on this. Maybe models can include a subcomponent that discovers moves. 
+A player can make moves on their turn, but also has the opportunity to draw out of turn. In my mind, it seems that the legal moves in a given situation might be considered an additional input to the Player. Providing this for free to the player does limit the opportunity for player ingenuity, but _might_ be necessary for an RL approach. I'll keep noodling on this. Maybe models can include a sub-component that discovers moves. 
 
 ## Bonus Information
-- Players might also find it useful to know what their total score is in a game (might inform riskerier/more conservative play)
-- historical performance of opponents would let one make assumptions about what shcemes they might employ, or failures they might be succeptible to.
+- Players might also find it useful to know what their total score is in a game (might inform riskier/more conservative play)
+- historical performance of opponents would let one make assumptions about what schemes they might employ, or failures they might be susceptible to.
