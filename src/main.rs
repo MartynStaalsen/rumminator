@@ -1,9 +1,6 @@
-mod engine;
-mod players;
-
 use anyhow::Result;
-use engine::hand;
-use players::BasicPlayer;
+use rumminator::engine::hand;
+use rumminator::test_player::BasicPlayer;
 
 fn main() -> Result<()> {
     println!("🃏 Starting Rumminator Game Engine");

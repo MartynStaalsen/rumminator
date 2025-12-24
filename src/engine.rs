@@ -2,9 +2,10 @@ use anyhow::{Result, anyhow};
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 use crate::{
-    GameState, ContractOrder, GamePhase, Player, PlayerView, DrawDecision, 
-    CardMove, TurnResult, CardRegistry, ContainerId, CardId, card_id_to_view, CardView, CardContainer
+    GameState, ContractOrder, Player, PlayerView, DrawDecision, 
+    CardMove, CardRegistry, ContainerId, CardId, CardView, CardContainer
 };
+use crate::card::{card_id_to_view, Rank, Suit};
 
 #[derive(Debug)]
 enum TurnOutcome {
@@ -91,7 +92,9 @@ fn run_turn(players: &mut [Box<dyn Player>], state: &mut GameState) -> Result<Tu
     let updated_view = generate_view(state, state.current_player);
     let turn_result = players[state.current_player].play_turn(&updated_view)?;
     
-    // 4. TODO: Validate and execute move ledger - simplified for now
+    // 4. Validate and execute move ledger
+    validate_move_ledger(state, &turn_result.move_ledger)?;
+    execute_move_ledger(state, turn_result.move_ledger)?;
     
     // 5. Execute discard
     execute_discard(state, turn_result.discard)?;
@@ -267,8 +270,8 @@ fn get_current_discard(state: &GameState) -> CardView {
         // Return a dummy card that's clearly invalid
         CardView {
             id: CardId::new(255, 255), // Invalid ID
-            rank: crate::Rank::Ace,
-            suit: crate::Suit::None,
+            rank: Rank::Ace,
+            suit: Suit::None,
             score_value: 0,
         }
     }

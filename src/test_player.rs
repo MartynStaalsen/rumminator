@@ -24,7 +24,7 @@ impl Player for BasicPlayer {
     
     fn play_turn(&mut self, view: &PlayerView) -> Result<TurnResult> {
         // For now, don't make any table moves, just discard highest card
-        let highest_card = self.find_highest_card(&view.hand)?;
+        let highest_card = self.find_highest_card(&view.held_cards)?;
         
         Ok(TurnResult {
             move_ledger: Vec::new(), // No table manipulation
@@ -38,7 +38,7 @@ impl Player for BasicPlayer {
 }
 
 impl BasicPlayer {
-    fn find_highest_card(&self, hand: &crate::CardContainer) -> Result<&CardView> {
+    fn find_highest_card<'a>(&self, hand: &'a crate::card::CardContainer) -> Result<&'a CardView> {
         if hand.cards.is_empty() {
             return Err(anyhow!("Hand is empty"));
         }
