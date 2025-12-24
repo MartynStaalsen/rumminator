@@ -86,3 +86,13 @@ The engine will represent all elements of game state, including on-table sets, e
 The engine is strictly about representing and managing game state. For the initial implementation, we will NOT consider re-use of any of its logic or representation ability for Player use. I'm doing this for two reasons:
 - disconnect implementation time for engine & player. Success for this project _could_ look like a working engine with now players, initially
 - allow the ability for competing player implementations: multiple developers could build their own Player models simultaneously, without the complexity & conflict of interest created by the possibility of modifying Engine code to suit such implementations.
+
+# Implementation Plan: Engine
+Let's start easy. The engine will be constructed from N (3-4) references to Player plugins. We'll use a "Player" trait to facilitate some method calls to each player on their turn. 
+At construction, the engine will initialize the game, which will include spawning a random initial deck (shuffling), dealing dealing hands, and placing the remaining cards in two stacks for the draw and discard pile.
+
+Now, play has begun. The engine will first have to figure out if anyone wants the discard, while also giving the first-of-turn the opportunity to take it as their draw. This will necessitate some kind of "i would like to draw that discard, if that's ok" negotiation between players -- either a pre-poll of the NOT to access if they want the discard, or a pre-nunu check where players can bid if they'd like the discard, only to be denied if they are preempted. The later provides more chance to gather intel on opponents, so we'll aim for that.
+
+Now, the turn-proper begins. The requested draw target is added to the player's hand, and a game view is generated for that player and passed as a TURN notification to the NOT. This player will then get a game view (includes public game state plus their hand). The player will now have an opportunity to make moves thru a game-state bid which will include a Discard.
+
+If, after any turn, a player has no cards remaining in their hand, the engine closes out, calculating a score for each player and exiting.
