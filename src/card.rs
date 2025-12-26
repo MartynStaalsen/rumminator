@@ -160,7 +160,7 @@ impl CardContainer {
 
 // Container registry system - ground truth for card locations
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct ContainerId(String);
+pub struct ContainerId(pub String);
 
 impl ContainerId {
     pub fn deck() -> Self { ContainerId("deck".to_string()) }

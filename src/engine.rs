@@ -73,6 +73,7 @@ fn initialize_game(num_players: usize, hand_number: usize) -> Result<GameState> 
         card_registry,
         current_player: 0,
         contract,
+        players_laid_down: vec![false; num_players],
     })
 }
 
@@ -131,25 +132,157 @@ fn execute_draw(state: &mut GameState, decision: DrawDecision) -> Result<()> {
 }
 
 fn validate_move_ledger(state: &GameState, moves: &[CardMove]) -> Result<()> {
-    // Basic validation - ensure player owns the cards they're moving
+    let current_player = state.current_player;
+    let has_laid_down = state.players_laid_down[current_player];
+    
+    // 1. Validate each move individually
     for card_move in moves {
-        if let Some(current_location) = state.card_registry.get_location(card_move.card_id) {
-            // Check if card is in current player's containers
-            let player_hand = ContainerId::player_hand(state.current_player);
-            // TODO: Add more sophisticated validation
-            if current_location != &player_hand {
-                // Allow moves from player's own laid-down sets too
-                // This is a simplified check for now
-            }
-        } else {
-            return Err(anyhow!("Card {:?} not found", card_move.card_id));
-        }
+        validate_single_move(state, card_move, current_player, has_laid_down)?;
     }
+    
+    // 2. Validate temp container is empty at end of turn
+    validate_temp_container_end_state(state, moves)?;
     
     Ok(())
 }
 
+fn validate_single_move(
+    state: &GameState, 
+    card_move: &CardMove, 
+    current_player: usize,
+    has_laid_down: bool
+) -> Result<()> {
+    // Validate source: player must own the card
+    validate_move_source(state, card_move.card_id, current_player, has_laid_down)?;
+    
+    // Validate target: depends on lay-down status  
+    validate_move_target(state, &card_move.to_container, current_player, has_laid_down)?;
+    
+    Ok(())
+}
+
+fn validate_move_source(
+    state: &GameState,
+    card_id: CardId,
+    current_player: usize,
+    has_laid_down: bool
+) -> Result<()> {
+    let current_location = state.card_registry.get_location(card_id)
+        .ok_or_else(|| anyhow!("Card {:?} not found in registry", card_id))?;
+    
+    // Valid sources: player's hand + (if laid down) player's own table sets
+    let player_hand = ContainerId::player_hand(current_player);
+    
+    if current_location == &player_hand {
+        return Ok(()); // Always valid to move from own hand
+    }
+    
+    if has_laid_down {
+        // After laying down, can move from own table sets
+        if is_own_table_container(current_location, current_player) {
+            return Ok(());
+        }
+    }
+    
+    Err(anyhow!(
+        "Invalid source: Player {} cannot move card from container {:?}",
+        current_player,
+        current_location
+    ))
+}
+
+fn validate_move_target(
+    state: &GameState,
+    target: &ContainerId,
+    current_player: usize,
+    has_laid_down: bool
+) -> Result<()> {
+    // Always invalid: hands, deck, discard
+    if is_invalid_target_always(target) {
+        return Err(anyhow!("Invalid target: {:?} is never a valid move target", target));
+    }
+    
+    // Always valid: temp container
+    if target == &ContainerId::table_temp() {
+        return Ok(());
+    }
+    
+    // Before laying down: only own empty group/run containers
+    if !has_laid_down {
+        if is_own_empty_set_container(state, target, current_player)? {
+            return Ok(());
+        } else {
+            return Err(anyhow!(
+                "Before laying down, player {} can only move to own empty set containers",
+                current_player
+            ));
+        }
+    }
+    
+    // After laying down: any table sets
+    if is_table_set_container(target) {
+        return Ok(());
+    }
+    
+    Err(anyhow!("Invalid target container: {:?}", target))
+}
+
+fn validate_temp_container_end_state(state: &GameState, moves: &[CardMove]) -> Result<()> {
+    // Calculate how many cards will be in temp after all moves
+    let temp_id = ContainerId::table_temp();
+    let initial_temp_count = state.card_registry.get_cards_in_container(&temp_id).len();
+    
+    let moves_to_temp = moves.iter().filter(|m| m.to_container == temp_id).count();
+    let moves_from_temp = moves.iter().filter(|m| {
+        state.card_registry.get_location(m.card_id) == Some(&temp_id)
+    }).count();
+    
+    let final_temp_count = initial_temp_count + moves_to_temp - moves_from_temp;
+    
+    if final_temp_count == 0 {
+        Ok(())
+    } else {
+        Err(anyhow!(
+            "Temp container must be empty at end of turn, but will have {} cards",
+            final_temp_count
+        ))
+    }
+}
+
+// Helper functions
+fn is_invalid_target_always(target: &ContainerId) -> bool {
+    matches!(target, 
+        ContainerId(s) if s.contains("_hand") || 
+                         s == "deck" || 
+                         s == "discard"
+    )
+}
+
+fn is_own_table_container(container: &ContainerId, player: usize) -> bool {
+    let player_prefix = format!("player_{}_", player);
+    container.0.starts_with(&player_prefix) && 
+    (container.0.contains("_group_") || container.0.contains("_run_"))
+}
+
+fn is_own_empty_set_container(
+    state: &GameState, 
+    target: &ContainerId, 
+    player: usize
+) -> Result<bool> {
+    if !is_own_table_container(target, player) {
+        return Ok(false);
+    }
+    
+    let cards_in_target = state.card_registry.get_cards_in_container(target);
+    Ok(cards_in_target.is_empty())
+}
+
+fn is_table_set_container(target: &ContainerId) -> bool {
+    target.0.contains("_group_") || target.0.contains("_run_")
+}
+
 fn execute_move_ledger(state: &mut GameState, moves: Vec<CardMove>) -> Result<()> {
+    // Execute all moves in sequence (validation already passed)
     for card_move in moves {
         state.card_registry.move_card(card_move.card_id, card_move.to_container)?;
     }

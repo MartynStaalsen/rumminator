@@ -15,4 +15,5 @@ pub struct GameState {
     pub card_registry: CardRegistry, // All card locations - the ground truth
     pub current_player: usize,
     pub contract: ContractOrder,
+    pub players_laid_down: Vec<bool>, // Track which players have fulfilled their contract
 }
